@@ -1,0 +1,155 @@
+agent Player {
+    module Console C;
+    module System sys;
+
+    types player {
+          formula move(string, int);
+          formula played(string,int);
+          formula line(int, int, int);
+
+          formula end();
+
+          formula free(int);
+          formula winner(string);
+          //formula loser(string);
+          formula drawn(string);
+
+          formula token(string);
+
+          // spaces on board
+          formula spot(int, string);
+
+          formula opponent(string);
+
+          formula turn(string);
+
+    }
+//spots on board all set to free intitially
+     initial spot(1, "free");
+     initial spot(2, "free");
+     initial spot(3, "free");
+     initial spot(4, "free");
+     initial spot(5, "free");
+     initial spot(6, "free");
+     initial spot(7, "free");
+     initial spot(8, "free");
+     initial spot(9, "free");
+// winning combination
+     initial line(1, 2, 3);
+     initial line(1, 5, 9);
+     initial line(1, 4, 7);
+     initial line(2, 5, 8);
+     initial line(3, 6, 9);
+     initial line(3, 5, 7);
+     initial line(4, 5, 6);
+     initial line(7, 8, 9);
+
+
+     inference free(int Sq) :- spot(Sq, "free");     // not "done" condition is to stop mulfunction that makes done winner
+     inference winner(string T) :- line(int L1, int L2, int L3) & spot(L1, T) & spot(L2, T) & spot(L3, T) & T~="done";
+
+    // inference loser(string T) :- winner(string T2) & token(T) & ~(T == T2);
+     inference drawn(string T) :- token(T) & ~free(int L) & ~winner(string T2);
+
+// can only make move when it is the player's turn
+     rule +turn(string T){ 
+          !move(T);
+          }
+
+
+//     rule +!move(string T) : free(1) {+move(T, 1);} 
+//     rule +!move(string T) : free(4) {+move(T, 4);}
+//     rule +!move(string T) : free(2) {+move(T, 2);}
+//     rule +!move(string T) : free(9) {+move(T, 9);}
+//     rule +!move(string T) : free(3) {+move(T, 3);}
+//     rule +!move(string T) : free(5) {+move(T, 5);}
+//     rule +!move(string T) : free(6) {+move(T, 6);}
+//     rule +!move(string T) : free(8) {+move(T, 8);}
+//     rule +!move(string T) : free(7) {+move(T, 7);}
+
+
+// when a move belif is created the play is made
+     rule +move(string T, int Sq) : free(Sq) {
+          +played(T, Sq);
+          C.println(""+ T +" MOVES TO SQUARE " + Sq);
+          // part 3 sending bit
+          query(opponent(string opp));
+          send(inform, opp, played(T, Sq));
+          //check for winner to end the game
+          if (query(winner(T))== true){
+               send(inform, opp, end());
+               +end();
+          }
+          } 
+// not strictly necessary to run this question but is needed in part 3
+     rule +played(string T, int Sq) {
+          -spot(Sq, "free");
+          +spot(Sq, T);
+          -turn(T); 
+     }
+
+     rule @message(inform, string sender, played(string T, int Sq)){
+          C.println("received message from " +sender + "!");
+          -spot(Sq, "free");
+          +spot(Sq, T);
+          query(token(string tok));
+// to stop error that occurs sometimes where will take one more move 
+// don't know why it runs sometimes and other times does not
+          if (query(winner(T))== false){
+               +turn(tok);
+          }
+          else{}
+     }
+     //receive winner message to end the game
+     rule @message(inform, string sender, end()){
+          +end();
+     }
+     // end belief chenges all free spots so that no free() exist
+     rule +end(){
+          foreach (spot(int Sq, "free")){
+               -spot(Sq, "free");
+               +spot(Sq, "done");
+          }
+     }
+
+// only used for tests
+     rule +free(int Sq){
+          C.println(Sq + " is free");
+
+     }
+
+
+
+     rule +!main([string token, string opponent]){
+          C.println("Game has not started yet....");
+          +opponent(opponent);
+          +token(token);
+
+          wait(free(1));
+          // Os go first
+          if (token == "O"){
+               +turn(token);
+               }
+          else {}
+
+          wait(~free(int Sq));
+          C.println("table full!");
+
+          if (drawn(string X)){
+               C.println("DRAW!!!");
+          }
+          else if (winner(string Y)){
+               C.println("Winner is " + Y);
+               if (Y == "O"){
+               C.println("Loser is X");
+               }
+               else if (Y == "X"){
+                    C.println("Loser is O");
+
+               }
+          }
+          }
+
+
+
+}

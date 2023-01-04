@@ -1,0 +1,17 @@
+agent Main {
+
+     module System sys;
+
+
+     rule +!main(list args){
+
+          sys.createAgent("player2", "Better");
+          sys.createAgent("player1", "LinearPlayer");
+
+          sys.setMainGoal("player2", ["O", "player1"]);
+          sys.setMainGoal("player1", ["X", "player2"]);
+          
+
+     }
+
+}

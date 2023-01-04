@@ -1,0 +1,99 @@
+agent Better extends Player2 {
+
+// chosen strategy is to give options to the other player if they go first to allow them to make early mistake
+// in a simple game the win always comes from a mistake
+// if going second it is best to take corners and then just block their 2s 
+
+// first move goes to the middle sides if going first/ all free - chose 4
+     rule +!move(string T) : free(1) & free(2) & free(3) & free(4) & free(5) & free(6) & free(7) & free(8) & free(9){+move(T, 4);} 
+// if second mover go middle ideally, and just block otherwise
+// also ideally go middle for second move after going first 
+// if you go second and middle is taken then you take a diagonal
+     rule +!move(string T) : free(5) {+move(T, 5);}
+     rule +!move(string T) : ~spot(5, T) & ~spot(4, T) {+move(T, 1);}
+// if first and middle is gone then must go to an opposite corner
+     rule +!move(string T) : ~spot(5, T) & spot(4, T) {+move(T, 3);}
+// if second and they took middle then following move should either block any double they make or if none go to the corner 
+     // if not in 4 or 5 then must have 3
+     rule +!move(string T) : ~spot(5, T) & ~spot(4, T) & ~free(4) & free(6) {+move(T, 6);}
+     rule +!move(string T) : ~spot(5, T) & ~spot(4, T) & ~free(2) & free(8) {+move(T, 8);}
+     rule +!move(string T) : ~spot(5, T) & ~spot(4, T) & ~free(6) & free(4) {+move(T, 4);}
+     // this one is important - must take another diagonal to avoid 2 double line ups
+     // also dictates where they must go next
+     rule +!move(string T) : ~spot(5, T) & ~spot(4, T) & ~free(7) & free(1){+move(T, 1);}
+     rule +!move(string T) : ~spot(5, T) & ~spot(4, T) & ~free(8) & free(2){+move(T, 2);}
+     rule +!move(string T) : ~spot(5, T) & ~spot(4, T) & ~free(9) & free(3){+move(T, 3);}
+// if the second move was for the middle will might chance to win or set up other 2
+// must not set up win for them by goin to corner close to 4
+// need to block any doubles
+     rule +!move(string T) : spot(5, T) & spot(4, T) & free(6) {+move(T, 6);} // win
+     rule +!move(string T) : spot(5, T) & spot(4, T) & ~free(6) & ~free(2) & free(3){+move(T, 3);}
+     rule +!move(string T) : spot(5, T) & spot(4, T) & ~free(6) & ~free(8) & free(9){+move(T, 9);}
+     // have to stop their win
+     rule +!move(string T) : spot(5, T) & spot(4, T) & ~free(6) & ~free(3) & free(9){+move(T, 9);}
+     rule +!move(string T) : spot(5, T) & spot(4, T) & ~free(6) & ~free(9) & free(3){+move(T, 3);}
+     // else just take an opposite diagonal to avoid set up
+     rule +!move(string T) : spot(5, T) & spot(4, T) & ~free(6) & ~free(3) & free(9){+move(T, 9);}
+     rule +!move(string T) : spot(5, T) & spot(4, T) & ~free(6) & ~free(9) & free(3){+move(T, 3);}
+     // block set ups by taking adjacent corner to their first move
+     rule +!move(string T) : spot(5, T) & spot(4, T) & ~free(6) & ~free(7) & free(9){+move(T, 9);}
+     rule +!move(string T) : spot(5, T) & spot(4, T) & ~free(6) & ~free(1) & free(3){+move(T, 3);}
+// if have spaces 3 and 4 then must block any of their 2s, hoping it will set up own win
+     // can conclude they already have middle
+     rule +!move(string T) : spot(4, T) & spot(3, T) & ~free(1) & free(9){+move(T, 9);}
+     rule +!move(string T) : spot(4, T) & spot(3, T) & ~free(2) & free(8){+move(T, 8);}
+     rule +!move(string T) : spot(4, T) & spot(3, T) & ~free(8) & free(2){+move(T, 2);}
+     rule +!move(string T) : spot(4, T) & spot(3, T) & ~free(9) & free(1){+move(T, 1);}
+     // if they haven't made a 2 then must be in 7 or 6
+     // can set up win if they are in 6
+     rule +!move(string T) : spot(4, T) & spot(3, T) & ~free(6) & free(1){+move(T, 1);}
+     rule +!move(string T) : spot(4, T) & spot(3, T) & ~free(7) & free(9){+move(T, 9);}
+
+
+// third move will be about cutting off 2s or setting up own 2s
+     // could only have been in 7, 3 or 2 if we are in 9
+     // spot 4 means we went first
+     rule +!move(string T) : spot(9, T) & spot(4, T) & ~free(7) & free(1) & free(1){+move(T, 1);} //win
+     rule +!move(string T) : spot(9, T) & spot(4, T) & ~free(1) & free(7) & free(7){+move(T, 7);} //win
+     // if past above then must both be taken
+     // doesn't matter much because can only win with middle line
+     rule +!move(string T) : spot(9, T) & spot(4, T) & ~free(7) & free(2) {+move(T, 2);}
+     // would have blocked corner to stop win before
+     rule +!move(string T) : spot(9, T) & spot(4, T) & ~free(2) & free(1) {+move(T, 1);} //win
+     rule +!move(string T) : spot(3, T) & spot(4, T) & ~free(8) & free(7) {+move(T, 7);} //win
+     // if neither worked then can only win in one more way, adjacent
+     rule +!move(string T) : spot(9, T) & spot(4, T) & ~free(2) & free(1) {+move(T, 1);} 
+     rule +!move(string T) : spot(3, T) & spot(4, T) & ~free(8) & free(7) {+move(T, 7);} 
+// fourth move will just be trying to join 2s and doing random for rest otherwise
+     // some winning combos already could have been taken so logic is difficult here
+     // 8 in total but can join from any way -> 3 each
+     //9 5 1, 3 5 7, 4 5 6 are either not possible or complete
+     rule +!move(string T) : spot(2, T) & spot(5, T) & free(8) {+move(T, 8);} 
+     rule +!move(string T) : spot(8, T) & spot(5, T) & free(2) {+move(T, 2);} 
+
+     rule +!move(string T) : spot(4, T) & spot(1, T) & free(7) {+move(T, 7);} 
+     rule +!move(string T) : spot(4, T) & spot(7, T) & free(1) {+move(T, 1);} 
+
+     rule +!move(string T) : spot(6, T) & spot(3, T) & free(9) {+move(T, 9);} 
+     rule +!move(string T) : spot(6, T) & spot(9, T) & free(2) {+move(T, 3);}
+     rule +!move(string T) : spot(3, T) & spot(9, T) & free(6) {+move(T, 6);} 
+
+     rule +!move(string T) : spot(1, T) & spot(3, T) & free(2) {+move(T, 2);} 
+     rule +!move(string T) : spot(1, T) & spot(2, T) & free(3) {+move(T, 3);}
+     rule +!move(string T) : spot(3, T) & spot(2, T) & free(1) {+move(T, 1);}
+
+     rule +!move(string T) : spot(7, T) & spot(8, T) & free(9) {+move(T, 9);} 
+     rule +!move(string T) : spot(7, T) & spot(9, T) & free(8) {+move(T, 8);}
+     rule +!move(string T) : spot(8, T) & spot(9, T) & free(7) {+move(T, 7);}
+// after this just fill whatever is free because can't win
+     rule +!move(string T) : free(1) {+move(T, 1);} 
+     rule +!move(string T) : free(2) {+move(T, 2);}
+     rule +!move(string T) : free(3) {+move(T, 3);}
+     rule +!move(string T) : free(4) {+move(T, 4);}
+     rule +!move(string T) : free(5) {+move(T, 5);}
+     rule +!move(string T) : free(6) {+move(T, 6);}
+     rule +!move(string T) : free(7) {+move(T, 7);}
+     rule +!move(string T) : free(8) {+move(T, 8);}
+     rule +!move(string T) : free(9) {+move(T, 9);}
+
+}
